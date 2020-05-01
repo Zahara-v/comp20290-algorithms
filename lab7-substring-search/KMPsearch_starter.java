@@ -1,8 +1,5 @@
-
-
-
-	// JAVA program for implementation of KMP pattern 
-	// searching algorithm 
+// JAVA program for implementation of KMP pattern 
+// searching algorithm 
 	  
 	class KMPsearch { 
 	    void KMPSearch(String pat, String txt) 
@@ -20,6 +17,28 @@
 	        computeLPSArray(pat, M, lps); 
 	  
 	       //insert your code here
+	        
+	        int i = 0; 
+	        while(i < N) {
+	        	if(pat.charAt(j) == txt.charAt(i)) {
+	        		j++;
+	        		i++;
+	        	}
+	        	if(j==M) {
+	        		System.out.println("pattern found at index " + (i-j));
+	        		
+	        		j = lps[j-1];
+	        	}
+	        	
+	        	else if(i < N && pat.charAt(j) != txt.charAt(i)) {
+	        		if(j != 0) {
+	        			j = lps[j-1];
+	        		}
+	        		else {
+	        			i = i + 1; 
+	        		}
+	        	}
+	        }
 	        
 	    } 
 	  
