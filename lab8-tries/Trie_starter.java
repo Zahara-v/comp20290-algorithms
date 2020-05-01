@@ -1,63 +1,87 @@
-import Trie.TrieNode;
-
-public class Trie{
-
-// Alphabet size (# of symbols) we pick 26 for English alphabet
-static final int ALPHABET_SIZE = 26; 
-
-
-// class for Trie node 
-static class TrieNode { 
-TrieNode[] children = new TrieNode[ALPHABET_SIZE]; 
-// isEndOfWord is true if the node represents end of a word i.e. leaf node
-boolean isEndOfWord; 
-
-TrieNode(){ 
-isEndOfWord = false; 
-
-for (int i = 0; i < ALPHABET_SIZE; i++) 
-children[i] = null; 
-} 
-}
-
-static TrieNode root;
-// If not key present, inserts into trie 
-// If the key is prefix of Trie node,  
-//  marks leaf node
-static void insert(String key){ 
-
+public class Tries {
 	
 
-} 
+	public static class TrieNode {
+		TrieNode[] children = new TrieNode[26];
+		boolean isEndOfWord;
+		public TrieNode() {
+			isEndOfWord = false;
+			for(int i=0; i<26; i++) {
+				children[i] = null;
+			}
+		}
+	}
 
-// Returns true if key presents in trie, else false 
-static boolean search(String key) { 
+	static TrieNode root;
 
-	
-} 
+	public static void insert(String key) {
 
+		TrieNode searcher = root;
+		int index;
 
-// Driver 
-public static void main(String args[]) { 
+		for (int i = 0; i < key.length(); i++) {
 
-// Input keys (use only 'a' through 'z' and lower case) 
-String keys[] = {"bank", "book", "bar", "bring", "film", "filter", "simple", "silt", "silver"};
+			index = key.charAt(i) - 'a';
 
+			if (searcher.children[index] == null)
+				searcher.children[index] = new TrieNode();
 
-String output[] = {"Not present in trie", "Present in trie"}; 
+			searcher = searcher.children[index];
 
-root = new TrieNode(); 
+		}
 
-// Construct trie 
-int i; 
-for (i = 0; i < keys.length ; i++) {
-insert(keys[i]); 
+		searcher.isEndOfWord = true;
+
+	}
+
+	public static boolean search(String key) {
+
+		TrieNode searcher = root;
+		int index;
+
+		for (int i = 0; i < key.length(); i++) {
+			index = key.charAt(i) - 'a';
+
+			if (searcher.children[index] == null)
+				return false;
+
+			searcher = searcher.children[index];
+		}
+
+		if (searcher != null && searcher.isEndOfWord == true) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	public static void main(String args[]) {
+		String[] keys = { "bank", "book", "bar", "bring", "film", "filter", "simple", "silt", "silver" };
+
+		String[] output = { "Not present in trie", "Present in trie" };
+
+		root = new TrieNode();
+
+		int i;
+		for (i = 0; i < keys.length; i++) {
+			insert(keys[i]);
+		}
+		
+		if(search("back") == true)
+			System.out.println("far: " + output[1]);
+			else
+				System.out.println("far: " + output[0]);
+		
+		if (search("bank") == true)
+			System.out.println("bank: " + output[1]);
+		else
+			System.out.println("bank: " + output[0]);
+		
+		if(search("simple") == true)
+			System.out.println("simple: " + output[1]);
+			else
+				System.out.println("simple: " + output[0]);
+
+		
+	}
 }
-
-// Search for different keys 
-
-
-} 
-
-//end of class
-} 
