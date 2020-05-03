@@ -1,26 +1,13 @@
-/******************************************************************************
- *  Compilation:  javac Huffman.java
- *
- *  Compress or expand a binary input stream using the Huffman algorithm.
- *
- * Add instructions and documentation related to your Huffman algorithm here...
- *
- ******************************************************************************/
+//Algorithm Assignment
+//Zahara Vazir & Gavin Ka Cheung 
 
-
-/**
- *  Add in your information about each method etc. here
- *
- *
- *  @author Your name
- */
-public class Huffman {
+public class Huffman_starter {
 
     // alphabet size of extended ASCII
     private static final int R = 256;
 
     // Do not instantiate.
-    private Huffman() { }
+    private Huffman_starter() { }
 
     // Huffman trie node
     private static class Node implements Comparable<Node> {
@@ -53,42 +40,48 @@ public class Huffman {
      * to standard output.
      */
     public static void compress() {
+ 
+    	
         // read the input
-
+        String s = BinaryStdIn.readString();
+        char[] input = s.toCharArray();
 
         // tabulate frequency counts
-
+        int[] freq = new int[R];
+        for (int i = 0; i < input.length; i++)
+            freq[input[i]]++;
 
         // build Huffman trie
-
+        Node root = buildTrie(freq);
 
         // build code table
-
+        String[] st = new String[R];
+        buildCode(st, root, "");
 
         // print trie for decoder
-
+        writeTrie(root);
 
         // print number of bytes in original uncompressed message
-
+        BinaryStdOut.write(input.length);
 
         // use Huffman code to encode input
+        for (int i = 0; i < input.length; i++) {
+            String code = st[input[i]];
+            for (int j = 0; j < code.length(); j++) {
+                if (code.charAt(j) == '0') {
+                    BinaryStdOut.write(false);
+                }
+                else if (code.charAt(j) == '1') {
+                    BinaryStdOut.write(true);
+                }
+                else throw new IllegalStateException("Illegal state");
+            }
+        }
 
-
-    }
-
-
-    /**
-     * Reads a sequence of bits that represents a Huffman-compressed message from
-     * standard input; expands them; and writes the results to standard output.
-     */
-    public static void decompress() {
-
-        // read in Huffman trie from input stream
-
-        // number of bytes to write
-
-        // decode using the Huffman trie
-
+        // close output stream
+        BinaryStdOut.close();
+        
+       
     }
 
     // build the Huffman trie given frequencies
@@ -96,15 +89,9 @@ public class Huffman {
 
         // initialze priority queue with singleton trees
         MinPQ<Node> pq = new MinPQ<Node>();
-        for (char i = 0; i < R; i++)
-            if (freq[i] > 0)
-                pq.insert(new Node(i, freq[i], null, null));
-
-        // special case in case there is only one character with a nonzero frequency
-        if (pq.size() == 1) {
-            if (freq['\0'] == 0) pq.insert(new Node('\0', 0, null, null));
-            else                 pq.insert(new Node('\1', 0, null, null));
-        }
+        for (char c = 0; c < R; c++)
+            if (freq[c] > 0)
+                pq.insert(new Node(c, freq[c], null, null));
 
         // merge two smallest trees
         while (pq.size() > 1) {
@@ -140,6 +127,33 @@ public class Huffman {
         }
     }
 
+    /**
+     * Reads a sequence of bits that represents a Huffman-compressed message from
+     * standard input; expands them; and writes the results to standard output.
+     */
+    public static void expand() {
+
+    	
+
+        // read in Huffman trie from input stream
+        Node root = readTrie();
+
+        // number of bytes to write
+        int length = BinaryStdIn.readInt();
+
+        // decode using the Huffman trie
+        for (int i = 0; i < length; i++) {
+            Node x = root;
+            while (!x.isLeaf()) {
+                boolean bit = BinaryStdIn.readBoolean();
+                if (bit) x = x.right;
+                else     x = x.left;
+            }
+            BinaryStdOut.write(x.ch, 8);
+        }
+        BinaryStdOut.close();
+    
+    }
 
 
     private static Node readTrie() {
@@ -154,13 +168,27 @@ public class Huffman {
 
     /**
      * Sample client that calls {@code compress()} if the command-line
-     * argument is "compress" an {@code decompress()} if it is "decompress".
+     * argument is "-" an {@code expand()} if it is "+".
      *
      * @param args the command-line arguments
      */
     public static void main(String[] args) {
+    	
+    	
+    	
+    	if  (args[0].equals("-")) {
 
+    		compress();
+    		
+    	}
+        else if (args[0].equals("+")) {
+        	expand();
+        	
+
+        }
+        else throw new IllegalArgumentException("Illegal command line argument");
+        
+
+        
     }
-
 }
-
