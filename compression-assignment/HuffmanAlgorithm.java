@@ -1,170 +1,181 @@
-public class HuffmanAlgorithm {
+import java.util.PriorityQueue;
+import java.util.*;
 
-    // alphabet size of extended ASCII
-    private static final int R = 256;
+    public class HuffmanAlgorithm{
 
-    // Do not instantiate.
-    private HuffmanAlgorithm() { }
+        char chars[];
+        int freq[];
+        Node root;
+        Map<Character,String> vector = new HashMap();
+        Map<String,Character> decodedMap = new HashMap();
 
-    // Huffman trie node
-    private static class Node implements Comparable<Node> {
-        private final char ch;
-        private final int freq;
-        private final Node left, right;
-
-        Node(char ch, int freq, Node left, Node right) {
-            this.ch    = ch;
-            this.freq  = freq;
-            this.left  = left;
-            this.right = right;
+        HuffmanAlgorithm()  {
         }
-
-        // is the node a leaf node?
-        private boolean isLeaf() {
-            assert ((left == null) && (right == null)) || ((left != null) && (right != null));
-            return (left == null) && (right == null);
+        HuffmanAlgorithm(char chars[], int freq[]){
+            this.chars = chars;
+            this.freq = freq;
+            root = null;
         }
+    
 
-        // compare, based on frequency
-        public int compareTo(Node that) {
-            return this.freq - that.freq;
-        }
-    }
-
-    /**
-     * Reads a sequence of 8-bit bytes from standard input; compresses them
-     * using Huffman codes with an 8-bit alphabet; and writes the results
-     * to standard output.
-     */
-    public static void compress() {
-        // read the input
-        String s = BinaryStdIn.readString();
-        char[] input = s.toCharArray();
-
-        // tabulate frequency counts
-        int[] freq = new int[R];
-        for (int i = 0; i < input.length; i++)
-            freq[input[i]]++;
-
-        // build Huffman trie
-        Node root = buildTrie(freq);
-
-        // build code table
-        String[] st = new String[R];
-        buildCode(st, root, "");
-
-        // print trie for decoder
-        writeTrie(root);
-
-        // print number of bytes in original uncompressed message
-        BinaryStdOut.write(input.length);
-
-        // use Huffman code to encode input
-        for (int i = 0; i < input.length; i++) {
-            String code = st[input[i]];
-            for (int j = 0; j < code.length(); j++) {
-                if (code.charAt(j) == '0') {
-                    BinaryStdOut.write(false);
+        void getFrequencies(String file)throws java.io.FileNotFoundException {
+            Scanner f = new Scanner(new java.io.File(file));
+            Map<Character,Integer> fm = new HashMap();
+            while(f.hasNextLine()){
+                String data = f.nextLine();
+                for(int i=0;i<data.length();i++){
+                    if(!fm.containsKey(data.charAt(i))){
+                        fm.put(data.charAt(i),0);
+                    }
+                    fm.put(data.charAt(i),fm.get(data.charAt(i))+1);
                 }
-                else if (code.charAt(j) == '1') {
-                    BinaryStdOut.write(true);
-                }
-                else throw new IllegalStateException("Illegal state");
+            }
+            Set<Character> keys = fm.keySet();
+            int size = keys.size();
+            chars = new char[size];
+            freq = new int[size];
+            int i=0;
+            for(char x : keys){
+                chars[i] = x;
+                freq[i] = fm.get(chars[i]);
+                i++;
+            }
+            System.out.println("Frequency counts:");
+            for(i=0;i<chars.length;i++){
+                System.out.println(chars[i]+" : "+freq[i]);
             }
         }
 
-        // close output stream
-        BinaryStdOut.close();
-    }
+        void buildTree(String file)throws java.io.FileNotFoundException{
+        
+            getFrequencies(file);
 
-    // build the Huffman trie given frequencies
-    private static Node buildTrie(int[] freq) {
-
-        // initialze priority queue with singleton trees
-        MinPQ<Node> pq = new MinPQ<Node>();
-        for (char c = 0; c < R; c++)
-            if (freq[c] > 0)
-                pq.insert(new Node(c, freq[c], null, null));
-
-        // merge two smallest trees
-        while (pq.size() > 1) {
-            Node left  = pq.delMin();
-            Node right = pq.delMin();
-            Node parent = new Node('\0', left.freq + right.freq, left, right);
-            pq.insert(parent);
-        }
-        return pq.delMin();
-    }
-
-
-    // write bitstring-encoded trie to standard output
-    private static void writeTrie(Node x) {
-        if (x.isLeaf()) {
-            BinaryStdOut.write(true);
-            BinaryStdOut.write(x.ch, 8);
-            return;
-        }
-        BinaryStdOut.write(false);
-        writeTrie(x.left);
-        writeTrie(x.right);
-    }
-
-    // make a lookup table from symbols and their encodings
-    private static void buildCode(String[] st, Node x, String s) {
-        if (!x.isLeaf()) {
-            buildCode(st, x.left,  s + '0');
-            buildCode(st, x.right, s + '1');
-        }
-        else {
-            st[x.ch] = s;
-        }
-    }
-
-    /**
-     * Reads a sequence of bits that represents a Huffman-compressed message from
-     * standard input; expands them; and writes the results to standard output.
-     */
-    public static void expand() {
-
-        // read in Huffman trie from input stream
-        Node root = readTrie();
-
-        // number of bytes to write
-        int length = BinaryStdIn.readInt();
-
-        // decode using the Huffman trie
-        for (int i = 0; i < length; i++) {
-            Node x = root;
-            while (!x.isLeaf()) {
-                boolean bit = BinaryStdIn.readBoolean();
-                if (bit) x = x.right;
-                else     x = x.left;
+            //HuffTree h = new HuffTree(chars,freq);
+            PriorityQueue<Node> heap = new PriorityQueue();
+            for(int i=0;i<chars.length;i++){
+                heap.add(new Node(chars[i],freq[i]));
             }
-            BinaryStdOut.write(x.ch, 8);
+            while(heap.size()!=1){
+                Node left  = heap.remove();
+                Node right = heap.remove();
+                //System.out.println(left+" "+right);
+                Node newNode = new Node(left.freq+right.freq);
+                newNode.left = left;
+                newNode.right = right;
+                root = newNode;
+                heap.add(newNode);
+            }
+            gen(root,"");
+            System.out.println("HuffMan codes : "+vector);
+
+
         }
-        BinaryStdOut.close();
+
+        String decode(String data){
+
+            String gen = "";
+            String ans = "";
+            Node temp = root;
+            for(int i=0;i<data.length();i++){
+                if(temp.leaf){
+                    ans = ans+ temp.ch+"";
+                    temp = root;
+                }
+                if(data.charAt(i)=='0'){
+                    temp = temp.left;
+                }
+                else{
+                    temp = temp.right;
+                }
+            }
+
+            return ans;
+        }
+
+        String encode(String data){
+            String ans = "";
+            for(int i=0;i<data.length();i++){
+                ans = ans+vector.get(data.charAt(i));
+            }
+            return ans;
+        }
+
+        String decodeFile(String fl)throws java.io.FileNotFoundException   {
+            Scanner f = new Scanner(fl);
+            String ans = "";
+            while(f.hasNextLine()){
+                ans = ans+decode(f.nextLine())+"\n";
+            }
+            return ans;
+        }
+
+        String encodeFile(String file)throws java.io.FileNotFoundException   {
+            Scanner f = new Scanner(new java.io.File(file));
+            String ans = "";
+            while(f.hasNextLine()){
+                ans = ans+encode(f.nextLine())+"\n";
+            }
+            return ans;
+        }
+
+        void gen( Node node, String gen){
+            if(node.leaf){
+                node.encoded = gen;
+                vector.put(node.ch,gen);
+                return;
+            }
+            gen(node.left,gen+"0");
+            gen(node.right,gen+"1");
+        }
+
+        void print(Node node){
+            if(node.leaf){
+                System.out.println(node);
+                return;
+            }
+            print(node.left);
+            print(node.right);
+        }
+
+        void traverseHuffmanTree() throws Exception{
+            print(root);
+        }
+        public static void main(String args[])throws java.io.FileNotFoundException{
+            String file = "/Users/zaharavazir/Desktop/sowpods.txt";
+            HuffmanAlgorithm tree = new HuffmanAlgorithm();
+            tree.buildTree(file);
+            String encoded = tree.encodeFile(file);
+            System.out.println("Encoded String "+encoded);
+            String decoded = tree.decodeFile(encoded);
+            System.out.println("Decoded String : \n"+decoded);
+
+        }
+    }
+class Node implements Comparable<Node> {
+    char ch;
+    int freq;
+    Node left, right;
+    boolean leaf = false;
+    String encoded = "";
+
+    Node(int freq) {
+        this.freq = freq;
+        this.leaf = false;
     }
 
-
-    private static Node readTrie() {
-        boolean isLeaf = BinaryStdIn.readBoolean();
-        if (isLeaf) {
-            return new Node(BinaryStdIn.readChar(), -1, null, null);
-        }
-        else {
-            return new Node('\0', -1, readTrie(), readTrie());
-        }
+    Node(char ch, int freq) {
+        this.ch = ch;
+        this.freq = freq;
+        this.leaf = true;
     }
 
-    /**
-     * Sample client that calls {@code compress()} if the command-line
-     * argument is "-" an {@code expand()} if it is "+".
-     *
-     * @param args the command-line arguments
-     */
-    public static void main(String[] args) {
-        if      (args[0].equals("-")) compress();
-        else if (args[0].equals("+")) expand();
-        else throw new IllegalArgumentException("Illegal command line argument");
+    @Override
+    public int compareTo(Node n) {
+        return this.freq - n.freq;
+    }
+
+    @Override
+    public String toString() {
+        return "(" + ch + " " + freq + " " + encoded + ")";
     }
 }
